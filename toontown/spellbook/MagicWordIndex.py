@@ -278,10 +278,11 @@ class MaxToon(MagicWord):
     def handleWord(self, invoker, avId, toon, *args):
         missingTrack = args[0]
 
-        gagTracks = [1] * (ToontownBattleGlobals.MAX_TRACK_INDEX + 1)
+        gagTracks = [1, 1, 1, 1, 1, 1, 1]
         if missingTrack != '':
             try:
-                index = ToontownBattleGlobals.Tracks.index(missingTrack)
+                index = ('toonup', 'trap', 'lure', 'sound', 'throw',
+                         'squirt', 'drop').index(missingTrack)
             except:
                 return 'Missing Gag track is invalid!'
             gagTracks[index] = 0
@@ -289,10 +290,10 @@ class MaxToon(MagicWord):
         toon.b_setMaxCarry(ToontownGlobals.MaxCarryLimit)
 
         experience = Experience.Experience(toon.getExperience(), toon)
-        for _, track in enumerate(toon.getTrackAccess()):
+        for i, track in enumerate(toon.getTrackAccess()):
             if track:
-                experience.maxOutExp()
-        toon.b_setExperience(experience.experience)
+                experience.experience[i] = (Experience.MaxSkill)
+        toon.b_setExperience(experience.makeNetString())
 
         toon.inventory.zeroInv()
         toon.inventory.maxOutInv()
@@ -303,7 +304,10 @@ class MaxToon(MagicWord):
         toon.b_setBankMoney(ToontownGlobals.DefaultMaxBankMoney)
 
         toon.b_setMaxHp(ToontownGlobals.MaxHpLimit)
-        toon.toonUp(toon.getMaxHp() - toon.getHp())
+        laff = toon.getMaxHp() - toon.getHp()
+        if laff < 15:
+            laff = 15
+        toon.toonUp(laff)
 
         toon.b_setHoodsVisited(ToontownGlobals.Hoods)
         toon.b_setTeleportAccess(ToontownGlobals.HoodsForTeleportAll)
@@ -1065,7 +1069,7 @@ class SetInventory(MagicWord):
         inventory = toon.inventory
         if type in ('reset', 'clear'):
             maxLevelIndex = level or 5
-            if not 0 <= maxLevelIndex < len(ToontownBattleGlobals.Levels):
+            if not 0 <= maxLevelIndex < len(ToontownBattleGlobals.Levels[0]):
                 return "Invalid max level index: {0}".format(maxLevelIndex)
             targetTrack = -1 or track
             if not -1 <= targetTrack < len(ToontownBattleGlobals.Tracks):
@@ -1080,7 +1084,7 @@ class SetInventory(MagicWord):
                 return "Inventory cleared for target track index: {0}".format(targetTrack)
         elif type == "restock":
             maxLevelIndex = level or 5
-            if not 0 <= maxLevelIndex < len(ToontownBattleGlobals.Levels):
+            if not 0 <= maxLevelIndex < len(ToontownBattleGlobals.Levels[0]):
                 return "Invalid max level index: {0}".format(maxLevelIndex)
             targetTrack = -1 or track
             if not -1 <= targetTrack < len(ToontownBattleGlobals.Tracks):
@@ -1101,7 +1105,7 @@ class SetInventory(MagicWord):
             if not toon.hasTrackAccess(targetTrack):
                 return "The target Toon doesn't have target track index: {0}".format(targetTrack)
             maxLevelIndex = level or 6
-            if not 0 <= maxLevelIndex < len(ToontownBattleGlobals.Levels):
+            if not 0 <= maxLevelIndex < len(ToontownBattleGlobals.Levels[0]):
                 return "Invalid max level index: {0}".format(maxLevelIndex)
             for _ in xrange(track):
                 inventory.addItem(targetTrack, maxLevelIndex)
@@ -1421,13 +1425,6 @@ class SkipCFO(MagicWord):
         battle = battle.lower()
 
         if battle == 'two':
-            if boss.state in ('PrepareBattleTwo', 'BattleTwo', 'PrepareBattleThree', 'BattleThree'):
-                return "You can not return to previous rounds!"
-            else:
-                boss.exitIntroduction()
-                boss.b_setState('PrepareBattleTwo')
-                return "Skipping to round 2..."
-        if battle == 'three':
             if boss.state in ('PrepareBattleThree', 'BattleThree'):
                 return "You can not return to previous rounds!"
             else:
@@ -1436,15 +1433,7 @@ class SkipCFO(MagicWord):
                 return "Skipping to last round..."
 
         if battle == 'next':
-            if boss.state in ('Elevator', 'Introduction'):
-                boss.exitIntroduction()
-                boss.b_setState('PrepareBattleOne')
-                return "Skipping intro..."
-            elif boss.state in ('PrepareBattleOne', 'BattleOne'):
-                boss.exitIntroduction()
-                boss.b_setState('PrepareBattleTwo')
-                return "Skipping current round..."
-            elif boss.state in ('PrepareBattleTwo', 'BattleTwo'):
+            if boss.state in ('PrepareBattleOne', 'BattleOne'):
                 boss.exitIntroduction()
                 boss.b_setState('PrepareBattleThree')
                 return "Skipping current round..."
@@ -1533,6 +1522,7 @@ class SkipCJ(MagicWord):
                 return "Skipping current round..."
             elif boss.state in ('PrepareBattleThree', 'BattleThree'):
                 boss.exitIntroduction()
+                boss.enterNearVictory()
                 boss.b_setState('Victory')
                 return "Skipping final round..."
 
@@ -1946,12 +1936,12 @@ class SetExp(MagicWord):
         if track in maxed:
             for track in tracks:
                 toon.experience.setExp(track, maxSkill)
-            toon.b_setExperience(toon.experience.experience)
+            toon.b_setExperience(toon.experience.makeNetString())
             return "Maxed all of {}'s gag tracks.".format(toon.getName())
         else:
             trackIndex = TTLocalizer.BattleGlobalTracks.index(track)
             toon.experience.setExp(trackIndex, amt)
-            toon.b_setExperience(toon.experience.experience)
+            toon.b_setExperience(toon.experience.makeNetString())
             return "Set %s exp to %d successfully." % (track, amt)
 
 
@@ -1960,7 +1950,7 @@ class SetPrestige(MagicWord):
     desc = "Modify the invoker's prestige tracks. "
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     arguments = [("toonup", int, True),("trap", int, True),("lure", int, True),("sound", int, True),
-                 ("throw", int, True),("squirt", int, True),("zap", int, True),("drop", int, True)]
+                 ("throw", int, True),("squirt", int, True),("drop", int, True)]
 
     def handleWord(self, invoker, avId, toon, *args):
         numTracks = ToontownBattleGlobals.MAX_TRACK_INDEX + 1

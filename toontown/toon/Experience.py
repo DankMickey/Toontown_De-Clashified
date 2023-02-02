@@ -25,10 +25,10 @@ def makeFromNetString(netString):
 class Experience:
     notify = DirectNotifyGlobal.directNotify.newCategory('Experience')
 
-    def __init__(self, experience=None, owner=None):
+    def __init__(self, expStr=None, owner=None):
         self.owner = owner
-        if experience:
-            self.experience = experience
+        if expStr:
+            self.experience = makeFromNetString(expStr)
         else:
             self.experience = []
             for track in xrange(0, len(Tracks)):
@@ -66,13 +66,13 @@ class Experience:
 
     def makeExpHigh(self):
         for track in xrange(0, len(Tracks)):
-            self.experience[track] = Levels[len(Levels) - 1] - 1
+            self.experience[track] = Levels[track][len(Levels[track]) - 1] - 1
 
     def makeExpRegular(self):
         import random
         for track in xrange(0, len(Tracks)):
             rank = random.choice((0, int(random.random() * 1500.0), int(random.random() * 2000.0)))
-            self.experience[track] = Levels[len(Levels) - 1] - rank
+            self.experience[track] = Levels[track][len(Levels[track]) - 1] - rank
 
     def zeroOutExp(self):
         for track in xrange(0, len(Tracks)):
@@ -93,9 +93,9 @@ class Experience:
     def getExpLevel(self, track):
         track = fixTrackIndex(track)
         level = 0
-        for amount in Levels:
+        for amount in Levels[track]:
             if self.experience[track] >= amount:
-                level = Levels.index(amount)
+                level = Levels[track].index(amount)
 
         return level
 
@@ -109,8 +109,8 @@ class Experience:
     def getNextExpValue(self, track, curSkill=None):
         if not curSkill:
             curSkill = self.experience[track]
-        retVal = Levels[len(Levels) - 1]
-        for amount in Levels:
+        retVal = Levels[track][len(Levels[track]) - 1]
+        for amount in Levels[track]:
             if curSkill < amount:
                 retVal = amount
                 return retVal
@@ -123,7 +123,7 @@ class Experience:
         nextExpValue = self.getNextExpValue(track, curSkill)
         finalGagFlag = 0
         while curSkill + extraSkill >= nextExpValue > curSkill and not finalGagFlag:
-            retList.append(Levels.index(nextExpValue))
+            retList.append(Levels[track].index(nextExpValue))
             newNextExpValue = self.getNextExpValue(track, nextExpValue)
             if newNextExpValue == nextExpValue:
                 finalGagFlag = 1

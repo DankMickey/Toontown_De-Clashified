@@ -198,7 +198,7 @@ class TutorialManagerAI(DistributedObjectAI):
 
         av.d_setInventory(av.inventory.makeNetString())
         av.experience.zeroOutExp()
-        av.d_setExperience(av.experience)
+        av.d_setExperience(av.experience.makeNetString())
 
     def allDone(self):
         avId = self.air.getAvatarIdFromSender()

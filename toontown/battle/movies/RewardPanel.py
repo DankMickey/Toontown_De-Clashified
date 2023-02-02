@@ -128,9 +128,9 @@ class RewardPanel(DirectFrame):
                                        command=self._handleSkip)
         return
 
-    def getNextExpValue(self, curSkill, track):
+    def getNextExpValue(self, curSkill, trackIndex):
         retVal = 0
-        for amount in ToontownBattleGlobals.Levels:
+        for amount in ToontownBattleGlobals.Levels[trackIndex]:
             if curSkill < amount:
                 retVal = amount
                 return retVal
@@ -481,7 +481,7 @@ class RewardPanel(DirectFrame):
         while origSkill + earnedSkill >= nextExpValue > origSkill and not finalGagFlag:
             if nextExpValue != ToontownBattleGlobals.MaxSkill:
                 intervalList += self.getNewGagIntervalList(toon, track,
-                                                           ToontownBattleGlobals.Levels.index(nextExpValue))
+                                                           ToontownBattleGlobals.Levels[track].index(nextExpValue))
             newNextExpValue = self.getNextExpValue(nextExpValue, track)
             if newNextExpValue == nextExpValue:
                 finalGagFlag = 1

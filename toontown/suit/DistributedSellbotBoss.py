@@ -125,7 +125,6 @@ class DistributedSellbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         self.unloadEnvironment()
         self.__unloadMotionPaths()
         self.__cleanupCagedToon()
-        self.__cleanupRescueToon()
         self.__clearOnscreenMessage()
         taskMgr.remove(self.uniqueName('PieAdvice'))
         self.__cleanupStrafe()
@@ -152,9 +151,9 @@ class DistributedSellbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
 
     def resetMaxDamage(self):
         if self.nerfed:
-            self.bossMaxDamage = SellbotBossMaxDamageNerfed
+            self.bossMaxDamage = ToontownGlobals.SellbotBossMaxDamageNerfed
         else:
-            self.bossMaxDamage = SellbotBossMaxDamage[self.battleTier]
+            self.bossMaxDamage = ToontownGlobals.SellbotBossMaxDamage[self.battleTier]
 
     def b_hitBoss(self, bossDamage, toon):
         self.hitBoss(bossDamage)
@@ -282,13 +281,6 @@ class DistributedSellbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
             self.cagedToon = None
         return
 
-    def __cleanupRescueToon(self):
-        if self.rescueToon:
-            self.rescueToon.removeActive()
-            self.rescueToon.delete()
-            self.rescueToon = None
-        return
-
     def __walkToonToPromotion(self, toonId, delay, mopath, track, delayDeletes):
         toon = base.cr.doId2do.get(toonId)
         if toon:
@@ -306,8 +298,8 @@ class DistributedSellbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
 
     def __walkDoober(self, suit, delay, turnPos, track, delayDeletes):
         turnPos = Point3(*turnPos)
-        turnPosDown = Point3(*SellbotBossDooberTurnPosDown)
-        flyPos = Point3(*SellbotBossDooberFlyPos)
+        turnPosDown = Point3(*ToontownGlobals.SellbotBossDooberTurnPosDown)
+        flyPos = Point3(*ToontownGlobals.SellbotBossDooberFlyPos)
         seq = Sequence(Func(suit.headsUp, turnPos), Wait(delay), Func(suit.loop, 'walk', 0),
                        self.__walkSuitToPoint(suit, suit.getPos(), turnPos),
                        self.__walkSuitToPoint(suit, turnPos, turnPosDown),
@@ -331,8 +323,8 @@ class DistributedSellbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         if self.doobers:
             self.__doobersToPromotionPosition(self.doobers[:4], self.battleANode)
             self.__doobersToPromotionPosition(self.doobers[4:], self.battleBNode)
-            turnPosA = SellbotBossDooberTurnPosA
-            turnPosB = SellbotBossDooberTurnPosB
+            turnPosA = ToontownGlobals.SellbotBossDooberTurnPosA
+            turnPosB = ToontownGlobals.SellbotBossDooberTurnPosB
             self.__walkDoober(self.doobers[0], 0, turnPosA, dooberTrack, delayDeletes)
             self.__walkDoober(self.doobers[1], 4, turnPosA, dooberTrack, delayDeletes)
             self.__walkDoober(self.doobers[2], 8, turnPosA, dooberTrack, delayDeletes)
@@ -435,17 +427,20 @@ class DistributedSellbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
                         name=self.uniqueName('Introduction'))
 
     def __makeRollToBattleTwoMovie(self):
-        startPos = Point3(SellbotBossBattleOnePosHpr[0:3])
+        startPos = Point3(ToontownGlobals.SellbotBossBattleOnePosHpr[0], ToontownGlobals.SellbotBossBattleOnePosHpr[1],
+                          ToontownGlobals.SellbotBossBattleOnePosHpr[2])
         if self.arenaSide:
-            topRampPos = Point3(*SellbotBossTopRampPosB)
-            topRampTurnPos = Point3(*SellbotBossTopRampTurnPosB)
-            p3Pos = Point3(*SellbotBossP3PosB)
+            topRampPos = Point3(*ToontownGlobals.SellbotBossTopRampPosB)
+            topRampTurnPos = Point3(*ToontownGlobals.SellbotBossTopRampTurnPosB)
+            p3Pos = Point3(*ToontownGlobals.SellbotBossP3PosB)
         else:
-            topRampPos = Point3(*SellbotBossTopRampPosA)
-            topRampTurnPos = Point3(*SellbotBossTopRampTurnPosA)
-            p3Pos = Point3(*SellbotBossP3PosA)
-        battlePos = Point3(SellbotBossBattleTwoPosHpr[0:3])
-        battleHpr = VBase3(SellbotBossBattleTwoPosHpr[3:6])
+            topRampPos = Point3(*ToontownGlobals.SellbotBossTopRampPosA)
+            topRampTurnPos = Point3(*ToontownGlobals.SellbotBossTopRampTurnPosA)
+            p3Pos = Point3(*ToontownGlobals.SellbotBossP3PosA)
+        battlePos = Point3(ToontownGlobals.SellbotBossBattleTwoPosHpr[0], ToontownGlobals.SellbotBossBattleTwoPosHpr[1],
+                           ToontownGlobals.SellbotBossBattleTwoPosHpr[2])
+        battleHpr = VBase3(ToontownGlobals.SellbotBossBattleTwoPosHpr[3], ToontownGlobals.SellbotBossBattleTwoPosHpr[4],
+                           ToontownGlobals.SellbotBossBattleTwoPosHpr[5])
         bossTrack = Sequence()
         bossTrack.append(Func(self.getGeomNode().setH, 180))
         bossTrack.append(Func(self.loop, 'Fb_neutral'))
@@ -499,10 +494,11 @@ class DistributedSellbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         return seq
 
     def __makeBossDamageMovie(self):
-        startPos = Point3(SellbotBossBattleTwoPosHpr[0:3])
-        startHpr = Point3(*SellbotBossBattleThreeHpr)
-        bottomPos = Point3(*SellbotBossBottomPos)
-        deathPos = Point3(*SellbotBossDeathPos)
+        startPos = Point3(ToontownGlobals.SellbotBossBattleTwoPosHpr[0], ToontownGlobals.SellbotBossBattleTwoPosHpr[1],
+                          ToontownGlobals.SellbotBossBattleTwoPosHpr[2])
+        startHpr = Point3(*ToontownGlobals.SellbotBossBattleThreeHpr)
+        bottomPos = Point3(*ToontownGlobals.SellbotBossBottomPos)
+        deathPos = Point3(*ToontownGlobals.SellbotBossDeathPos)
         self.setPosHpr(startPos, startHpr)
         bossTrack = Sequence()
         bossTrack.append(Func(self.loop, 'Fb_neutral'))
@@ -510,6 +506,7 @@ class DistributedSellbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         bossTrack.append(track)
         track, hpr = self.rollBossToPoint(bottomPos, startHpr, deathPos, None, 1)
         bossTrack.append(track)
+        duration = bossTrack.getDuration()
         return bossTrack
 
     def __talkAboutPromotion(self, speech):
@@ -543,7 +540,7 @@ class DistributedSellbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
             Wait(0.2),
             Func(self.cagedToon.loop, 'walk'),
             self.cagedToon.posInterval(0.8, Point3(0, -6, 0)),
-            Func(self.cagedToon.setChatAbsolute, TTLocalizer.CagedToonHooray, CFSpeech),
+            Func(self.cagedToon.setChatAbsolute, TTLocalizer.CagedToonYippee, CFSpeech),
             ActorInterval(self.cagedToon, 'jump'),
             Func(self.cagedToon.loop, 'neutral'),
             Func(self.cagedToon.headsUp, localAvatar),
@@ -761,7 +758,7 @@ class DistributedSellbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         self.rampC.request('retracted')
         self.setCageIndex(0)
         self.reparentTo(render)
-        self.setPosHpr(*SellbotBossBattleOnePosHpr)
+        self.setPosHpr(*ToontownGlobals.SellbotBossBattleOnePosHpr)
         self.happy = 1
         self.raised = 1
         self.forward = 1
@@ -774,7 +771,7 @@ class DistributedSellbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
 
     def enterIntroduction(self):
         self.reparentTo(render)
-        self.setPosHpr(*SellbotBossBattleOnePosHpr)
+        self.setPosHpr(*ToontownGlobals.SellbotBossBattleOnePosHpr)
         self.stopAnimate()
         DistributedBossCog.DistributedBossCog.enterIntroduction(self)
         self.rampA.request('extended')
@@ -790,7 +787,7 @@ class DistributedSellbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
     def enterBattleOne(self):
         DistributedBossCog.DistributedBossCog.enterBattleOne(self)
         self.reparentTo(render)
-        self.setPosHpr(*SellbotBossBattleOnePosHpr)
+        self.setPosHpr(*ToontownGlobals.SellbotBossBattleOnePosHpr)
         self.clearChat()
         self.cagedToon.clearChat()
         self.rampA.request('retract')
@@ -830,7 +827,7 @@ class DistributedSellbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
     def __onToPrepareBattleTwo(self):
         self.disableToonCollision()
         self.unstickBoss()
-        self.setPosHpr(*SellbotBossBattleTwoPosHpr)
+        self.setPosHpr(*ToontownGlobals.SellbotBossBattleTwoPosHpr)
         self.doneBarrier('RollToBattleTwo')
 
     def exitRollToBattleTwo(self):
@@ -886,7 +883,7 @@ class DistributedSellbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         mult = ToontownBattleGlobals.getBossBattleCreditMultiplier(2)
         localAvatar.inventory.setBattleCreditMultiplier(mult)
         self.reparentTo(render)
-        self.setPosHpr(*SellbotBossBattleTwoPosHpr)
+        self.setPosHpr(*ToontownGlobals.SellbotBossBattleTwoPosHpr)
         self.clearChat()
         self.cagedToon.clearChat()
         self.rampA.request('retract')
@@ -973,7 +970,7 @@ class DistributedSellbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         self.bossHealthBar.initialize(self.bossMaxDamage - self.bossDamage, self.bossMaxDamage)
 
     def __doneBattleThree(self):
-        self.setState('Victory')
+        self.setState('NearVictory')
         self.unstickBoss()
 
     def exitBattleThree(self):
@@ -999,12 +996,49 @@ class DistributedSellbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         self.battleThreeMusic.stop()
         return
 
+    def enterNearVictory(self):
+        self.cleanupIntervals()
+        self.reparentTo(render)
+        self.setPos(*ToontownGlobals.SellbotBossDeathPos)
+        self.setHpr(*ToontownGlobals.SellbotBossBattleThreeHpr)
+        self.clearChat()
+        self.cagedToon.clearChat()
+        self.setCageIndex(4)
+        self.releaseToons(finalBattle=1)
+        self.rampA.request('retract')
+        self.rampB.request('retract')
+        self.rampC.request('extend')
+        self.accept('enterCage', self.__touchedCage)
+        self.accept('pieSplat', self.__finalPieSplat)
+        self.accept('localPieSplat', self.__localPieSplat)
+        self.accept('outOfPies', self.__outOfPies)
+        localAvatar.setCameraFov(ToontownGlobals.BossBattleCameraFov)
+        self.happy = 0
+        self.raised = 0
+        self.forward = 1
+        self.doAnimate()
+        self.setDizzy(1)
+        base.playMusic(self.battleThreeMusic, looping=1, volume=0.9, time=self.battleThreeMusicTime)
+
+    def exitNearVictory(self):
+        self.ignore('enterCage')
+        self.ignore('pieSplat')
+        self.ignore('localPieSplat')
+        self.ignore('outOfPies')
+        self.__clearOnscreenMessage()
+        taskMgr.remove(self.uniqueName('PieAdvice'))
+        localAvatar.setCameraFov(ToontownGlobals.CogHQCameraFov)
+        self.__removeCageShadow()
+        self.setDizzy(0)
+        self.battleThreeMusicTime = self.battleThreeMusic.getTime()
+        self.battleThreeMusic.stop()
+
     def enterVictory(self):
         self.cleanupIntervals()
         localAvatar.setCameraFov(ToontownGlobals.BossBattleCameraFov)
         self.reparentTo(render)
-        self.setPos(*SellbotBossDeathPos)
-        self.setHpr(*SellbotBossBattleThreeHpr)
+        self.setPos(*ToontownGlobals.SellbotBossDeathPos)
+        self.setHpr(*ToontownGlobals.SellbotBossBattleThreeHpr)
         self.clearChat()
         self.cagedToon.clearChat()
         self.setCageIndex(4)
@@ -1136,7 +1170,7 @@ class DistributedSellbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
 
     def enterFrolic(self):
         DistributedBossCog.DistributedBossCog.enterFrolic(self)
-        self.setPosHpr(*SellbotBossBattleOnePosHpr)
+        self.setPosHpr(*ToontownGlobals.SellbotBossBattleOnePosHpr)
 
     def doorACallback(self, isOpen):
         if self.insidesANodePath:
@@ -1217,6 +1251,12 @@ class DistributedSellbotBoss(DistributedBossCog.DistributedBossCog, FSM.FSM):
         doId = int(avatarDoId)
         if doId != localAvatar.doId:
             self.d_hitToon(doId)
+
+    def __finalPieSplat(self, toon, pieCode):
+        if pieCode != ToontownGlobals.PieCodeBossCog:
+            return
+        self.sendUpdate('finalPieSplat', [])
+        self.ignore('pieSplat')
 
     def cagedToonBattleThree(self, index, avId):
         str = TTLocalizer.CagedToonBattleThree.get(index)

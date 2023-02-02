@@ -113,7 +113,7 @@ class NewsPageButtonManager(FSM.FSM):
         self.__blinkIval.pause()
 
     def isNewIssueButtonShown(self):
-        if base.cr.inGameNewsMgr and localAvatar.getLastTimeReadNews() < base.cr.inGameNewsMgr.getLatestIssue():
+        if localAvatar.getLastTimeReadNews() < base.cr.inGameNewsMgr.getLatestIssue():
             return True
         return False
 

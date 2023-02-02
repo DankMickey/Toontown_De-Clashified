@@ -2,7 +2,6 @@ import copy
 import math
 
 from direct.directnotify import DirectNotifyGlobal
-from direct.showbase.MessengerGlobal import messenger
 from panda3d.toontown import *
 
 import SuitDNA
@@ -121,16 +120,14 @@ class SuitBase:
             self.statuses[status['name']] = status
 
     def getStatus(self, name):
-        if name in self.statuses.keys():
+        if name in self.statuses:
             return self.statuses[name]
         else:
             return None
 
     def removeStatus(self, name):
         if name in self.statuses.keys():
-            lostStatus = copy.deepcopy(self.statuses.pop(name, None))
-            messenger.send('suit-lost-status', [self, lostStatus])
-            return lostStatus
+            return copy.deepcopy(self.statuses.pop(name, None))
 
     def decStatusRounds(self, statusName):
         for status in self.statuses.values():
@@ -141,3 +138,9 @@ class SuitBase:
                                       (self.dna.name, status['name'], status['rounds']))
                     return self.removeStatus(status['name'])
         return None
+
+    def getLureRounds(self):
+        lured = self.getStatus(SuitBattleGlobals.SuitStatusNames[0])
+        if lured:
+            return lured['rounds']
+        return -1
